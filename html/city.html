@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <!-- ... 其他标签 ... -->
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+  <title>city</title>
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  <style lang="css">
+    .vue3-table table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .vue3-table th,
+    .vue3-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+
+    .vue3-table th {
+      background-color: #f2f2f2;
+    }
+
+    .modal {
+      position: fixed;
+      top: 0;
+      right: 0;
+      left: 0;
+      bottom: 0;
+      z-index: 9;
+      display: none;
+      background-color: white;
+    }
+
+    .modal.show {
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</head>
+
+<body style="margin: 0;padding: 0;">
+  <!-- Vue 实例挂载点 -->
+  <div id="app">
+    <div style="height: 80px;">
+      <div style="display: flex;justify-content: space-between; padding: 20px;">
+        <a href="javascript:void(0)" @click="gaback">返回</a>
+        <a href="javascript:void(0)" @click="add">添加</a>
+      </div>
+      <div style="text-align: center;">
+        {{current.join(',')}}
+      </div>
+    </div>
+
+    <div style="padding: 20px;box-sizing: border-box;height: calc(100vh - 80px);overflow: auto;">
+      <my-table :columns="columns" :data-source="dataList" @show-row="handleRow"></my-table>
+    </div>
+    <div :class="['modal',{show}]" style="align-items: center;" @click="show = false">
+      <div style="box-sizing: border-box;width: 100%;;display: flex;justify-content: flex-end;padding: 50px;">
+        <button>关闭</button>
+      </div>
+      <div style="height: 80vh;width: 600px;background-color: #f2f2f2;" @click.top>
+        <iframe v-if="show" :src="iframeUrl" frameborder="0" width="100%" height="100%"></iframe>
+      </div>
+    </div>
+  </div>
+  <script defer src="/js/request.js"></script>
+  <!-- 自定义组件定义 -->
+  <script type="module">
+    import MyTable from '/js/components/my-table.js'
+    // 创建一个新的Vue实例
+    const { onMounted, ref } = Vue;
+    const app = Vue.createApp({
+      components: {
+        "my-table": MyTable,
+      },
+      setup () {
+        const current = ref([])
+        let api = ''
+        const dataList = ref([])
+        const getDataList = (upId, list) => {
+          for (let i = 0; i < list.length; i++) {
+            const item = list[i]
+            if (item.cityId == upId) {
+              dataList.value = item.child
+              break
+            } else if (item.child && item.child.length) {
+              getDataList(upId, item.child)
+            }
+          }
+        }
+
+        const list = ref([])
+        const getData = async () => {
+          const res = await ajaxRequest("GET", api);
+          list.value = res.data
+          const upId = localStorage.getItem('upId')
+          if (!!(~~upId)) {
+            getDataList(upId, list.value)
+          } else {
+            dataList.value = list.value
+          }
+        }
+
+        onMounted(async () => {
+          api = `${location.pathname}.json`
+          await getData()
+          window.reloadData = () => {
+            show.value = false
+            getData()
+          }
+        });
+        const handleRow = async (row, isEdit, isDelete) => {
+          if (isEdit) {
+            localStorage.setItem('currentRow', JSON.stringify(row))
+            iframeUrl.value = `/upsert?type=PUT&pi=${location.pathname}`
+            setTimeout(() => {
+              show.value = true
+            }, 0);
+            return
+          }
+          if (isDelete) {
+            await ajaxRequest('DELETE', api, row)
+            getData()
+            return
+          }
+          if (row.child && row.child.length) {
+            dataList.value = row.child
+          } else {
+            dataList.value = []
+          }
+          current.value = [...current.value, row.cityName]
+          localStorage.setItem('upId', row.cityId)
+        }
+        const show = ref(false)
+        const iframeUrl = ref('')
+        const add = () => {
+          iframeUrl.value = `/upsert?type=POST&pi=${location.pathname}`
+          setTimeout(() => {
+            show.value = true
+          }, 0);
+        }
+        const getUPList = (upId, list) => {
+          let result = []
+          for (let i = 0; i < list.length; i++) {
+            const item = list[i]
+            if (item.cityId == upId) {
+              result = list
+              break
+            }
+            if (item.child) {
+              result = getUPList(upId, item.child)
+              if (result.length) break
+            }
+          }
+          return result
+        }
+        const gaback = () => {
+          let upId
+          const first = dataList.value[0]
+          if (first) {
+            upId = first.upId
+          } else {
+            upId = localStorage.getItem('upId')
+          }
+          const jjj = getUPList(upId, list.value)
+          if (jjj.length) {
+            dataList.value = jjj
+            const fst = dataList.value[0]
+            localStorage.setItem('upId', fst.upId)
+            current.value.pop()
+          } else {
+            history.back()
+          }
+        }
+        return {
+          columns: ['cityName', 'cityId', 'kindId', 'pyFirst', 'pyFull', 'upId', {
+            render: true
+          }],
+          dataList,
+          handleRow,
+          add,
+          gaback,
+          show,
+          iframeUrl,
+          current
+        }
+      },
+    });
+
+    // 挂载Vue实例到 DOM 元素
+    app.mount("#app");
+  </script>
+</body>
+
+</html>

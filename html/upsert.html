@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>add</title>
+</head>
+
+<body>
+  <div style="display: flex;align-items: center;justify-content: center;">
+    <div style="padding: 20px;">
+      <div>
+        <fieldset>
+          <legend>cityName</legend>
+          <input style="width: 450px;height: 30px;" id="cityName" type="text" placeholder="cityName">
+        </fieldset>
+        <fieldset>
+          <legend>cityId</legend>
+          <input style="width: 450px;height: 30px;" id="cityId" type="text" placeholder="cityId">
+        </fieldset>
+        <fieldset>
+          <legend>kindId</legend>
+          <input style="width: 450px;height: 30px;" id="kindId" type="text" placeholder="kindId">
+        </fieldset>
+        <fieldset>
+          <legend>pyFirst</legend>
+          <input style="width: 450px;height: 30px;" id="pyFirst" type="text" placeholder="pyFirst">
+        </fieldset>
+        <fieldset>
+          <legend>pyFull</legend>
+          <input style="width: 450px;height: 30px;" id="pyFull" type="text" placeholder="pyFull">
+        </fieldset>
+        <fieldset>
+          <legend>upId</legend>
+          <input disabled style="width: 450px;height: 30px;" id="upId" type="text" placeholder="upId">
+        </fieldset>
+      </div>
+      <div style="display: flex;justify-content: center;margin-top: 20px;">
+        <button id="button">提交</button>
+      </div>
+    </div>
+  </div>
+</body>
+<script src="/js/request.js"></script>
+<script>
+  function getPa (query) {
+    return Object.fromEntries(query.replace('?', '').split('&').map(item => item.split('=')))
+  }
+  const query = location.search
+  const params = getPa(query)
+  const cr = localStorage.getItem('currentRow')
+  let row = { child: [] }
+  const upId = localStorage.getItem('upId')
+  document.getElementById('upId').value = upId || '0'
+  if (params.type == 'PUT') {
+    row = JSON.parse(cr)
+    document.getElementById('cityName').value = row.cityName
+    document.getElementById('cityId').value = row.cityId
+    document.getElementById('kindId').value = row.kindId
+    document.getElementById('pyFirst').value = row.pyFirst
+    document.getElementById('pyFull').value = row.pyFull
+    document.getElementById('upId').value = row.upId || '0'
+  }
+
+  function getData () {
+    const cityName = document.getElementById('cityName').value
+    const cityId = document.getElementById('cityId').value
+    const kindId = document.getElementById('kindId').value
+    const pyFirst = document.getElementById('pyFirst').value
+    const pyFull = document.getElementById('pyFull').value
+    const upId = document.getElementById('upId').value
+    return { cityName, cityId, kindId, pyFirst, pyFull, upId }
+  }
+
+  document.getElementById('button').addEventListener('click', async () => {
+    const data = getData()
+    await ajaxRequest(params.type, `${params.pi}.json`, { ...data, child: row.child })
+    parent.window.reloadData()
+  })
+</script>
+
+</html>

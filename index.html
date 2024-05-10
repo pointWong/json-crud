@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>city-json</title>
+</head>
+
+<body style="padding-top: 50px;">
+  
+</body>
+<script src="/js/request.js"></script>
+<script>
+  async function getDir () {
+    const res = await ajaxRequest('GET', '/jsondir')
+    const html = res.map(item => {
+      return `<div style="display: flex;justify-content: center;margin-bottom: 10px;">
+                <a href="/${item.replace('.json','')}">${item}</a>
+              </div>`
+    }).join('')
+    document.body.innerHTML = html
+  }
+  getDir()
+</script>
+
+</html>
