@@ -5,23 +5,46 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>city-json</title>
+  <link rel="stylesheet" href="/style/css/index.css">
 </head>
 
-<body style="padding-top: 50px;">
-  
+<body style="padding: 10px;">
+  <div>文件目录</div>
+  <div id="container" class="m-t-10"></div>
+  <div class="display-flex m-t-20">
+    <input id="filename" type="text" placeholder="请输入文件名">
+    <button class="m-l-10" id="addbutton">新增文件</button>
+  </div>
 </body>
 <script src="/js/request.js"></script>
 <script>
   async function getDir () {
     const res = await ajaxRequest('GET', '/jsondir')
     const html = res.map(item => {
-      return `<div style="display: flex;justify-content: center;margin-bottom: 10px;">
-                <a href="/${item.replace('.json','')}">${item}</a>
+      return `<div style="margin-bottom: 10px;">
+                <a href="${item}">${item}.json</a>
+                <button class="m-l-20" onclick="javascript:deleteFile('${item}')">删除</button>
               </div>`
     }).join('')
-    document.body.innerHTML = html
+    document.getElementById('container').innerHTML = html
   }
   getDir()
+
+  document.getElementById('addbutton').addEventListener('click', async () => {
+    const fileName = document.getElementById('filename').value
+    if (!fileName) {
+      window.alert('请输入文件名称')
+      return
+    }
+    await ajaxRequest('POST', '/handle-json', { fileName })
+    document.getElementById('filename').value = ""
+    getDir()
+  })
+
+  async function deleteFile (file) {
+    await ajaxRequest('DELETE', '/handle-json', { fileName: file })
+    getDir()
+  }
 </script>
 
 </html>

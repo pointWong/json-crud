@@ -91,7 +91,18 @@
             }
           }
         }
-
+        const columns = ref([])
+        const setCols = () => {
+          try {
+            const cc = Object.keys(dataList.value[0]).filter(item => item != 'child')
+            localStorage.setItem('columns', JSON.stringify(cc))
+            columns.value = [...cc, {
+              render: true
+            }]
+          } catch (error) {
+            localStorage.removeItem('columns')
+          }
+        }
         const list = ref([])
         const getData = async () => {
           const res = await ajaxRequest("GET", api);
@@ -102,10 +113,11 @@
           } else {
             dataList.value = list.value
           }
+          setCols()
         }
 
         onMounted(async () => {
-          api = `${location.pathname}.json`
+          api = `/json${location.pathname}.json`
           await getData()
           window.reloadData = () => {
             show.value = false
@@ -119,6 +131,7 @@
             setTimeout(() => {
               show.value = true
             }, 0);
+            // window.open(`/upsert?type=PUT&pi=${location.pathname}`,'_blank')
             return
           }
           if (isDelete) {
@@ -141,6 +154,7 @@
           setTimeout(() => {
             show.value = true
           }, 0);
+          // window.open(`/upsert?type=POST&pi=${location.pathname}`,'_blank')
         }
         const getUPList = (upId, list) => {
           let result = []
@@ -176,9 +190,7 @@
           }
         }
         return {
-          columns: ['cityName', 'cityId', 'kindId', 'pyFirst', 'pyFull', 'upId', {
-            render: true
-          }],
+          columns,
           dataList,
           handleRow,
           add,
