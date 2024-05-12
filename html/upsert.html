@@ -25,58 +25,66 @@
 </body>
 <script src="/js/request.js"></script>
 <script>
+  const query = location.search
+  const params = getPa(query)
+  const cr = localStorage.getItem('currentRow')
+  const upId = localStorage.getItem('upId')
+  let row = { upId, child: [] }
+
   let columns = []
   try {
     columns = JSON.parse(localStorage.getItem('columns')) || []
+    if(params.type ==="POST" && !columns.includes('upId')){
+      columns = [...columns, 'upId']
+    }
+
   } catch (error) {
     console.log("🚀 ~ error:", error)
   }
 
-  function getPa (query) {
+  function getPa(query) {
     return Object.fromEntries(query.replace('?', '').split('&').map(item => item.split('=')))
   }
 
-  function setField (row) {
+  function setField(row) {
     let result = ''
     for (let i = 0; i < columns.length; i++) {
       const col = columns[i]
       result += `<fieldset>
           <legend>${col}</legend>
-          <input value="${row ? row[col] : '0'}" style="width: 450px;height: 30px;" id="${col}" type="text" placeholder="${col}">
+          <input value="${row && row[col] ? row[col] : '0'}" style="width: 450px;height: 30px;" id="${col}" type="text" placeholder="${col}">
         </fieldset>`
     }
     document.getElementById('columns').innerHTML = result
   }
 
-  document.getElementById('addprop').addEventListener('click', () => {
-    const key = document.getElementById('propname').value
-    columns = [...columns,key]
-    setField()
-  })
-
-  const query = location.search
-  const params = getPa(query)
-  const cr = localStorage.getItem('currentRow')
-  let row = { child: [] }
-  const upId = localStorage.getItem('upId')
-
   if (params.type == 'PUT') {
     row = JSON.parse(cr)
     setField(row)
+  } else {
+    setField(row)
   }
 
-  function getData () {
+  document.getElementById('addprop').addEventListener('click', () => {
+    const key = document.getElementById('propname').value
+    columns = [...columns, key]
+    setField()
+  })
+
+  function getData() {
     let data = {}
     for (let i = 0; i < columns.length; i++) {
       let prop = columns[i]
       data[prop] = document.getElementById(prop).value
     }
-
     return data
   }
 
   document.getElementById('button').addEventListener('click', async () => {
-    const data = getData()
+    let data = getData()
+    if (!data.id) {
+      data.id = data.cityId || new Date().getTime().toString()
+    }
     await ajaxRequest(params.type, `/json${params.pi}.json`, { ...data, child: row.child })
     parent.window.reloadData()
   })

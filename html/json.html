@@ -76,14 +76,14 @@
       components: {
         "my-table": MyTable,
       },
-      setup () {
+      setup() {
         const current = ref([])
         let api = ''
         const dataList = ref([])
         const getDataList = (upId, list) => {
           for (let i = 0; i < list.length; i++) {
             const item = list[i]
-            if (item.cityId == upId) {
+            if (item.cityId == upId || item.id == upId) {
               dataList.value = item.child
               break
             } else if (item.child && item.child.length) {
@@ -145,7 +145,7 @@
             dataList.value = []
           }
           current.value = [...current.value, row.cityName]
-          localStorage.setItem('upId', row.cityId)
+          localStorage.setItem('upId', row.cityId || row.id)
         }
         const show = ref(false)
         const iframeUrl = ref('')
@@ -160,7 +160,7 @@
           let result = []
           for (let i = 0; i < list.length; i++) {
             const item = list[i]
-            if (item.cityId == upId) {
+            if (item.cityId == upId || item.id == upId) {
               result = list
               break
             }

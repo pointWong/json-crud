@@ -44,7 +44,7 @@ async function readRequestBody (req) {
 function setRowInData (row, data) {
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
-    if (item.cityId === row.cityId) {
+    if (item.cityId === row.cityId || item.id === row.id) {
       data[i] = row;
       break
     } else {
@@ -68,7 +68,7 @@ function insertRowInData (row, data) {
   }
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
-    if (item.cityId === row.upId) {
+    if (item.cityId === row.upId || item.id === row.upId) {
       data[i].child = [...data[i].child, row];
       break
     } else {
@@ -84,7 +84,7 @@ function insertRowInData (row, data) {
 function deleteRowFromData (row, data) {
   for (let i = 0; i < data.length; i++) {
     const item = data[i];
-    if (item.cityId === row.cityId) {
+    if (item.cityId === row.cityId || item.id === row.id) {
       data.splice(i, 1)
       break
     }
