@@ -50,10 +50,15 @@
     let result = ''
     for (let i = 0; i < columns.length; i++) {
       const col = columns[i]
-      result += `<fieldset>
+      result += `<div id="${col}-ctn">
+        <fieldset>
           <legend>${col}</legend>
           <input value="${row && row[col] ? row[col] : '0'}" style="width: 450px;height: 30px;" id="${col}" type="text" placeholder="${col}">
-        </fieldset>`
+        </fieldset>
+          <div class="display-flex justify-end m-t-4">
+            <button onclick="javascript:deleteField('${col}');">删除</button>
+          </div>
+        </div>`
     }
     document.getElementById('columns').innerHTML = result
   }
@@ -66,9 +71,12 @@
   }
 
   document.getElementById('addprop').addEventListener('click', () => {
-    const key = document.getElementById('propname').value
+    const propnameEle = document.getElementById('propname')
+    let key = propnameEle.value || prompt('请输入字段名')
+    if(!key) return
     columns = [...columns, key]
     setField()
+    propnameEle.value = ""
   })
 
   function getData() {
@@ -88,6 +96,12 @@
     await ajaxRequest(params.type, `/json${params.pi}.json`, { ...data, child: row.child })
     parent.window.reloadData()
   })
+
+  function deleteField(col){
+    const child = document.getElementById(`${col}-ctn`)
+    columns = columns.filter(item => item != col)
+    document.getElementById('columns').removeChild(child)
+  }
 </script>
 
 </html>
