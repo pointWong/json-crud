@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "scss":"sass --watch style/scss/index.scss --no-source-map --style compressed style/css/index.css",
-    "dev": "pnpm run scss & node --watch -- ./index.js"
+    "start":"node --watch -- ./index.js",
+    "dev": "pnpm run scss & pnpm run start",
+    "dev:windows":"run-p scss start"
   },
   "author": "",
   "license": "ISC",
