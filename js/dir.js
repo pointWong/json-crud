@@ -1,10 +1,14 @@
 const fs = require('fs');
 
-function readDir(path) {
+function readDirByPath (path = '/', justDir = true) {
     try {
-        return fs.readdirSync(path);
+        const dirfile = fs.readdirSync(path);
+        if (justDir) {
+            return dirfile.filter(file => !file.startsWith('.')).filter(file => fs.statSync((path.endsWith('/') ? path : path + '/') + file).isDirectory())
+        }
+        return dirfile
     } catch (error) {
         console.log(error)
     }
 }
-module.exports = { readDir }
+module.exports = { readDirByPath }

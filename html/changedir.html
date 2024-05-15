@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>更换json目录</title>
+  <link rel="stylesheet" href="/style/css/index.css">
+</head>
+
+<body>
+  <div class="pad-30">
+    <div>
+      <button onclick="goback()">上一级</button>
+    </div>
+    <div class="m-t-10" id="dirs"></div>
+  </div>
+</body>
+<script src="/js/request.js"></script>
+<script>
+  let fullpath = ''
+  function getPa(query) {
+    return Object.fromEntries(query.replace('?', '').split('&').map(item => item.split('=')))
+  }
+  const query = location.search
+  const params = getPa(query)
+  fullpath = params.jsonDirPath
+  function setDirs (list) {
+    let html = ''
+    for (let i = 0; i < list.length; i++) {
+      let item = list[i]
+      html += `<div class="m-b-6">
+        <a href="javascript:void(0);" onclick="select('${item}')">${item}</a>
+        <button style='margin-left:20px' onclick="jump('${item}')">查看</button>
+        </div>`
+    }
+    document.getElementById('dirs').innerHTML = html
+  }
+  async function getDir (path = '/') {
+    const res = await ajaxRequest('GET', `/get-dir?path=${path}&hideFile=`)
+    setDirs(res)
+  }
+  getDir(fullpath)
+
+  
+  function jump (path) {
+    fullpath += `/${path}`
+    getDir(fullpath)
+  }
+  async function select (path) {
+    const dirPath = `${fullpath}/${path}`
+    await ajaxRequest('POST', '/replace-dir', { dirPath })
+    parent.window.reloadData()
+  }
+  function goback () {
+    let arr = fullpath.split('/')
+    arr.pop()
+    fullpath = arr.join('/')
+    getDir(fullpath ? fullpath : '/')
+  }
+</script>
+
+</html>

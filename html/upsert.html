@@ -53,7 +53,7 @@
       result += `<div id="${col}-ctn">
         <fieldset>
           <legend>${col}</legend>
-          <input value="${row && row[col] ? row[col] : '0'}" style="width: 450px;height: 30px;" id="${col}" type="text" placeholder="${col}">
+          <input value="${row && row[col] ? row[col] : ''}" style="width: 450px;height: 30px;" id="${col}" type="text" placeholder="${col}">
         </fieldset>
           <div class="display-flex justify-end m-t-4">
             <button onclick="javascript:deleteField('${col}');">删除</button>
@@ -91,9 +91,12 @@
   document.getElementById('button').addEventListener('click', async () => {
     let data = getData()
     if (!data.id) {
-      data.id = data.cityId || new Date().getTime().toString()
+      data.id = data.cityId || new Date().toISOString().replace(/[^\d]/g,'').slice(0,14)
     }
-    await ajaxRequest(params.type, `/json${params.pi}.json`, { ...data, child: row.child })
+    if(!data.upId){
+      data.upId = '0'
+    }
+    await ajaxRequest(params.type, `${params.pi}.json`, { ...data, child: row.child })
     parent.window.reloadData()
   })
 
