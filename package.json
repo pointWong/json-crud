@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "scss":"sass --watch style/scss/index.scss --no-source-map --style compressed style/css/index.css",
-    "start":"node --watch -- ./index.js",
+    "scss": "sass --watch style/scss/index.scss --no-source-map --style compressed style/css/index.css",
     "dev": "pnpm run scss & pnpm run start",
-    "dev:windows":"run-p scss start"
+    "start": "node --watch -- ./index.js",
+    "dev:windows": "run-p scss start",
+    "serve": "node ./index.js"
   },
   "author": "",
   "license": "ISC",
