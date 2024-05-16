@@ -50,6 +50,12 @@
 .relative {
   position: relative;
 }
+.overflow-auto{
+  overflow: auto;
+}
+.border-box{
+  box-sizing: border-box;
+}
 .top-0 {
   top: 0;
 }
@@ -139,6 +145,9 @@
 }
 .m-l-20 {
   margin-left: 20px;
+}
+.pad-12{
+  padding: 12px;
 }
 .pad-30 {
   padding: 30px;

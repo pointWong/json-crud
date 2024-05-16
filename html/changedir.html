@@ -8,18 +8,21 @@
   <link rel="stylesheet" href="/style/css/index.css">
 </head>
 
-<body>
-  <div class="pad-30">
+<body style="margin: 0;padding: 0;">
+  <div style="height: 100vh;" class="pad-12 display-flex flex-col border-box">
     <div>
-      <button onclick="goback()">上一级</button>
+      <div>单击查看，双击选择</div>
+      <div class="m-t-12">
+        <button onclick="goback()">上一级</button>
+      </div>
     </div>
-    <div class="m-t-10" id="dirs"></div>
+    <div class="m-t-10 flex-grow-1 overflow-auto" id="dirs"></div>
   </div>
 </body>
 <script src="/js/request.js"></script>
 <script>
   let fullpath = ''
-  function getPa(query) {
+  function getPa (query) {
     return Object.fromEntries(query.replace('?', '').split('&').map(item => item.split('=')))
   }
   const query = location.search
@@ -30,8 +33,7 @@
     for (let i = 0; i < list.length; i++) {
       let item = list[i]
       html += `<div class="m-b-6">
-        <a href="javascript:void(0);" onclick="select('${item}')">${item}</a>
-        <button style='margin-left:20px' onclick="jump('${item}')">查看</button>
+        <a href="javascript:void(0);" onclick="jump('${item}')" ondblclick="select('${item}')">${item}</a>
         </div>`
     }
     document.getElementById('dirs').innerHTML = html
@@ -42,15 +44,25 @@
   }
   getDir(fullpath)
 
-  
+  let isdblclicking = false
+  // 单击查看
   function jump (path) {
-    fullpath += `/${path}`
-    getDir(fullpath)
+    setTimeout(() => {
+      if (isdblclicking) return
+      isdblclicking = false
+      fullpath += `/${path}`
+      getDir(fullpath)
+    }, 200);
   }
+  // 双击选择
   async function select (path) {
+    isdblclicking = true
     const dirPath = `${fullpath}/${path}`
     await ajaxRequest('POST', '/replace-dir', { dirPath })
     parent.window.reloadData()
+    setTimeout(() => {
+      isdblclicking = false
+    }, 150);
   }
   function goback () {
     let arr = fullpath.split('/')
