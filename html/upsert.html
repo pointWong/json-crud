@@ -47,6 +47,7 @@
   }
 
   function setField(row) {
+    console.log("🚀 ~ setField ~ row:", row)
     let result = ''
     for (let i = 0; i < columns.length; i++) {
       const col = columns[i]
@@ -74,8 +75,9 @@
     const propnameEle = document.getElementById('propname')
     let key = propnameEle.value || prompt('请输入字段名')
     if(!key) return
+    const data = getData()
     columns = [...columns, key]
-    setField()
+    setField(data)
     propnameEle.value = ""
   })
 

@@ -1,7 +1,17 @@
-const path = require('path');
-const { readRequestBody, getUrlParams } = require("./req");
-const { readFile, writeFile, getJsonDir } = require("./file");
-const { readDirByPath } = require('./dir');
+function getUrlParams (url) {
+  return Object.fromEntries(url.split('?')[1].split('&').map(item => item.split('=')))
+}
+
+async function readRequestBody (req) {
+  const data = [];
+  // 读取请求体的流
+  for await (const chunk of req) {
+    data.push(chunk);
+  }
+  // 将Buffer数组转换为字符串，并尝试解析为JSON
+  const buffer = Buffer.concat(data);
+  return JSON.parse(buffer.toString());
+}
 
 // 更新数据
 function setRowInData (row, data) {
@@ -58,40 +68,6 @@ function deleteRowFromData (row, data) {
   return data
 }
 
-// 返回html
-const readHtmlAndResponse = async (res, path) => {
-  const content = await readFile(path)
-  res.writeHead(200, { 'Content-Type': 'text/html' });
-  res.end(content);
-}
-
-// 读取、写入或删除json数据
-const readAndWriteJSONData = async (req, res) => {
-  const url = req.url
-  const cityJSONPath = path.join(getJsonDir(), url)
-  let content = await readFile(cityJSONPath)
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  if (req.method === "GET") {
-    res.end(content);
-    return
-  }
-  const contentJson = JSON.parse(content)
-  const { data } = contentJson
-  const row = await readRequestBody(req);
-  if (req.method === 'POST') {
-    // 增加
-    contentJson.data = insertRowInData(row, data)
-  } else if (req.method === 'DELETE') {
-    // 删除
-    contentJson.data = deleteRowFromData(row, data)
-  } else if (req.method === 'PUT') {
-    // 修改
-    contentJson.data = setRowInData(row, data)
-  }
-  await writeFile(cityJSONPath, JSON.stringify(contentJson))
-  res.end("{\"msg\":\"操作成功\"}");
-}
-
 // 通过url设置相应头content-type
 function setContentTypeByUrl (url) {
   if (url.endsWith('.js')) {
@@ -103,21 +79,13 @@ function setContentTypeByUrl (url) {
   }
 }
 
-function sendDirFileList (req, res) {
-  const row = getUrlParams(req.url)
-  const { path, hideFile } = row
-  const dirs = readDirByPath(path, hideFile)
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(dirs));
-}
+
 
 module.exports = {
+  getUrlParams,
   readRequestBody,
   setRowInData,
   insertRowInData,
   deleteRowFromData,
-  readHtmlAndResponse,
-  readAndWriteJSONData,
-  setContentTypeByUrl,
-  sendDirFileList
+  setContentTypeByUrl
 }

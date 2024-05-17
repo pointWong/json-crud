@@ -1,6 +1,18 @@
 const fs = require('fs'); // 引入文件系统模块
 const path = require('path');
-const { readRequestBody } = require('./req');
+
+// 读取文件夹下所有文件
+function readDirByPath (path = '/', justDir = true) {
+  try {
+      const dirfile = fs.readdirSync(path);
+      if (justDir) {
+          return dirfile.filter(file => !file.startsWith('.')).filter(file => fs.statSync((path.endsWith('/') ? path : path + '/') + file).isDirectory())
+      }
+      return dirfile
+  } catch (error) {
+      console.log(error)
+  }
+}
 // 读文件
 const readFile = (filePath) => {
   return new Promise((resolve, reject) => {
@@ -27,28 +39,6 @@ const writeFile = (filePath, data) => {
   })
 }
 
-// 创建或删除json文件
-async function handleJSONFile (req, res) {
-  const row = await readRequestBody(req)
-  let { fileName } = row
-  if (!fileName.endsWith('.json')) {
-    fileName = fileName + '.json'
-  }
-  const filePath = path.join(getJsonDir(), fileName)
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  if (req.method === 'DELETE') {
-    fs.unlinkSync(filePath)
-    res.end("{\"msg\":\"文件已删除！\"}")
-  } else if (req.method === 'POST') {
-    if (fs.existsSync(filePath)) {
-      res.end("{\"msg\":\"文件已存在！\"}");
-      return
-    }
-    fs.writeFileSync(filePath, JSON.stringify({ data: [] }))
-    res.end("{\"msg\":\"操作成功\"}");
-  }
-}
-
 let jsonDir = path.join(process.cwd(), 'json')
 
 function getFileList () {
@@ -65,21 +55,16 @@ function getJsonDir () {
   return jsonDir
 }
 
-async function changeJsonDir (req, res) {
-  if (req.method === 'POST') {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    const row = await readRequestBody(req)
-    const { dirPath } = row
-    jsonDir = dirPath
-    res.end(JSON.stringify({
-      msg:'操作成功',
-      dirPath
-    }))
-  } else {
-    res.writeHead(404, { 'Content-Type': 'application/json' });
-    res.end('method not allow!');
-  }
-
+function setJsonDir (dir) {
+  jsonDir = dir
 }
 
-module.exports = { readFile, writeFile, handleJSONFile, getFileList, getJsonDir, changeJsonDir, getJsonFileList }
+module.exports = {
+  readDirByPath,
+  readFile,
+  writeFile,
+  getFileList,
+  getJsonFileList,
+  getJsonDir,
+  setJsonDir
+}

@@ -135,6 +135,15 @@
             getData()
           }
         });
+        const getName = (row) => {
+          for (let key in row) {
+            let lkey = key.toLowerCase()
+            if (lkey.includes('name') || lkey.includes('label')) {
+              return row[key]
+            }
+          }
+          return row.id
+        }
         const handleRow = async (row, isEdit, isDelete) => {
           if (isEdit) {
             localStorage.setItem('currentRow', JSON.stringify(row))
@@ -154,8 +163,8 @@
           } else {
             dataList.value = []
           }
-          current.value = [...current.value, row.cityName || row.name || row.id]
-          localStorage.setItem('upId', row.cityId || row.id)
+          current.value = [...current.value, getName(row)]
+          localStorage.setItem('upId', row.cityId || row.id || '0')
         }
         const show = ref(false)
         const iframeUrl = ref('')
@@ -193,7 +202,7 @@
           if (jjj.length) {
             dataList.value = jjj
             const fst = dataList.value[0]
-            localStorage.setItem('upId', fst.upId)
+            localStorage.setItem('upId', fst.upId || '0')
             current.value.pop()
           } else {
             localStorage.removeItem('upId')

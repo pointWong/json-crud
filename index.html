@@ -59,6 +59,7 @@
     const html = jsonFileanmeList.map(item => {
       return `<div style="margin-bottom: 10px;">
                 <a href="${item}">${item}.json</a>
+                <button class="m-l-20" onclick="javascript:compress('${item}')">压缩</button>
                 <button class="m-l-20" onclick="javascript:deleteFile('${item}')">删除</button>
               </div>`
     }).join('')
@@ -83,6 +84,11 @@
     await ajaxRequest('DELETE', '/handle-json', { fileName: file })
     getDir()
   }
+
+  async function compress(file){
+    await ajaxRequest('POST','/compress',{fileName:file})
+  }
+
   const submitchangeEle = document.getElementById('submitchange')
   const modalEle = document.getElementById('modal')
   const modalContentEle = document.getElementById('modal-content')

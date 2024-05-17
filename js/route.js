@@ -1,11 +1,11 @@
 const path = require('path');
-const { getJsonFileList, handleJSONFile, readFile, changeJsonDir, getJsonDir } = require('./file');
-const { readHtmlAndResponse, readAndWriteJSONData, setContentTypeByUrl, sendDirFileList } = require('./util');
 const homeHtml = './index.html'
 const jsonHtml = './html/json.html'
 const upsertHtml = './html/upsert.html'
 const changedirHtml = './html/changedir.html'
 const frontAssetsDirRegExp = /\/(js|css)\/\**/
+const { getJsonFileList } = require('./file');
+const { notFound, serverError, readHtmlAndResponse, readAndWriteJSONData, frontEndAssets, sendJsonDir, handleJSONFile, sendDirFileList, changeJsonDir, compressFile } = require('./res');
 
 let jsonFileanmeList = getJsonFileList()
 
@@ -18,7 +18,7 @@ const sendResponse = async (req, res) => {
     } else if (url.startsWith('/upsert')) {
       // 添加、修改页面
       readHtmlAndResponse(res, upsertHtml)
-    } else if(url.startsWith('/changedir')){
+    } else if (url.startsWith('/changedir')) {
       readHtmlAndResponse(res, changedirHtml)
     } else if (jsonFileanmeList.includes(url)) {
       // 数据展示页面
@@ -28,35 +28,28 @@ const sendResponse = async (req, res) => {
       readAndWriteJSONData(req, res)
     } else if (frontAssetsDirRegExp.test(url)) {
       // 前端资源
-      const fp = path.join(process.cwd(), url)
-      const content = await readFile(fp)
-      res.writeHead(200, { 'Content-Type': setContentTypeByUrl(url) });
-      res.end(content);
+      frontEndAssets(res, url)
     } else if (url == '/jsondir') {
       // 获取指定目录下的json文件
       jsonFileanmeList = await getJsonFileList()
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      const obj = {
-        jsonDir: getJsonDir(),
-        jsonFileanmeList
-      }
-      res.end(JSON.stringify(obj));
+      sendJsonDir(res, jsonFileanmeList)
     } else if (url == '/handle-json') {
       // 创建/删除json文件
-      handleJSONFile(req, res)
+      handleJSONFile(req, res) 
     } else if (url.startsWith('/get-dir')) {
       // 获取目录
-      sendDirFileList(req, res)
+      sendDirFileList(req, res) 
     } else if (url == '/replace-dir') {
       // 更换json目录
-      changeJsonDir(req, res)
+      changeJsonDir(req, res) 
+    } else if (url == '/compress') {
+      // 压缩
+      compressFile(req, res)
     } else {
-      res.writeHead(404, { 'Content-Type': 'application/json' });
-      res.end('Not Found');
+      notFound(res)
     }
   } catch (error) {
-    res.writeHead(500, { 'Content-Type': 'application/json' });
-    res.end('Internal Server Error:' + JSON.stringify(error));
+    serverError(res)
   }
 }
 
