@@ -19,11 +19,12 @@ const sendResponse = async (req, res) => {
       // 添加、修改页面
       readHtmlAndResponse(res, upsertHtml)
     } else if (url.startsWith('/changedir')) {
+      // 切换指定目录页面
       readHtmlAndResponse(res, changedirHtml)
     } else if (jsonFileanmeList.includes(url)) {
       // 数据展示页面
       readHtmlAndResponse(res, jsonHtml)
-    } else if (/^.+\.json.*$/.test(url)) {
+    } else if (/^[^\/]+\.json.*$/.test(url)) {
       // json文件数据操作，增删查改等
       readAndWriteJSONData(req, res)
     } else if (frontAssetsDirRegExp.test(url)) {
@@ -35,13 +36,13 @@ const sendResponse = async (req, res) => {
       sendJsonDir(res, jsonFileanmeList)
     } else if (url == '/handle-json') {
       // 创建/删除json文件
-      handleJSONFile(req, res) 
+      handleJSONFile(req, res)
     } else if (url.startsWith('/get-dir')) {
       // 获取目录
-      sendDirFileList(req, res) 
+      sendDirFileList(req, res)
     } else if (url == '/replace-dir') {
       // 更换json目录
-      changeJsonDir(req, res) 
+      changeJsonDir(req, res)
     } else if (url == '/compress') {
       // 压缩
       compressFile(req, res)
@@ -49,7 +50,7 @@ const sendResponse = async (req, res) => {
       notFound(res)
     }
   } catch (error) {
-    serverError(res)
+    serverError(res, error)
   }
 }
 

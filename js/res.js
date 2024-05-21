@@ -41,12 +41,16 @@ const readAndWriteJSONData = async (req, res) => {
 }
 
 // 指定文件夹列表
-function sendDirFileList (req, res) {
-  const row = getUrlParams(req.url)
-  const { path, hideFile } = row
-  const dirs = readDirByPath(path, hideFile)
-  res.writeHead(200, { 'Content-Type': 'application/json' });
-  res.end(JSON.stringify(dirs));
+async function sendDirFileList (req, res) {
+  try {
+    const row = getUrlParams(req.url)
+    const { path, hideFile } = row
+    const dirs = await readDirByPath(path, hideFile)
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify(dirs));
+  } catch (error) {
+    serverError(res, error)
+  }
 }
 
 // 创建或删除json文件
@@ -136,7 +140,7 @@ async function methodNotAllow (res) {
   res.end('method not allow!');
 }
 // 500
-async function serverError (res) {
+async function serverError (res, error) {
   res.writeHead(500, { 'Content-Type': 'application/json' });
   res.end('Internal Server Error:' + JSON.stringify(error));
 }

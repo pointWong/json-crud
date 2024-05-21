@@ -4,13 +4,13 @@ const path = require('path');
 // 读取文件夹下所有文件
 function readDirByPath (path = '/', justDir = true) {
   try {
-      const dirfile = fs.readdirSync(path);
-      if (justDir) {
-          return dirfile.filter(file => !file.startsWith('.')).filter(file => fs.statSync((path.endsWith('/') ? path : path + '/') + file).isDirectory())
-      }
-      return dirfile
+    const dirfile = fs.readdirSync(path);
+    if (justDir) {
+      return dirfile.filter(file => !file.startsWith('.')).filter(file => fs.statSync((path.endsWith('/') ? path : path + '/') + file).isDirectory())
+    }
+    return dirfile
   } catch (error) {
-      console.log(error)
+    console.log("🚀 ~ readDirByPath ~ error:", error)
   }
 }
 // 读文件
@@ -42,13 +42,21 @@ const writeFile = (filePath, data) => {
 let jsonDir = path.join(process.cwd(), 'json')
 
 function getFileList () {
-  const files = fs.readdirSync(jsonDir);
-  return files
+  try {
+    const files = fs.readdirSync(jsonDir);
+    return files
+  } catch (error) {
+    console.log("🚀 ~ getFileList ~ error:", error)
+  }
 }
 
 function getJsonFileList () {
-  const files = getFileList().filter(item => item.endsWith('.json')).map(item => `/${item.replace('.json', '')}`)
-  return files
+  try {
+    const files = getFileList().filter(item => item.endsWith('.json')).map(item => `/${item.replace('.json', '')}`)
+    return files
+  } catch (error) {
+    console.log("🚀 ~ getJsonFileList ~ error:", error)
+  }
 }
 
 function getJsonDir () {
