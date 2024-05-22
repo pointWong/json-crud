@@ -1,7 +1,6 @@
 const path = require('path');
 const homeHtml = './index.html'
 const jsonHtml = './html/json.html'
-const upsertHtml = './html/upsert.html'
 const changedirHtml = './html/changedir.html'
 const frontAssetsDirRegExp = /\/(js|css)\/\**/
 const { getJsonFileList } = require('./file');
@@ -15,16 +14,13 @@ const sendResponse = async (req, res) => {
     if (url === '/') {
       // 首页页面
       readHtmlAndResponse(res, homeHtml)
-    } else if (url.startsWith('/upsert')) {
-      // 添加、修改页面
-      readHtmlAndResponse(res, upsertHtml)
     } else if (url.startsWith('/changedir')) {
       // 切换指定目录页面
       readHtmlAndResponse(res, changedirHtml)
     } else if (jsonFileanmeList.includes(url)) {
       // 数据展示页面
       readHtmlAndResponse(res, jsonHtml)
-    } else if (/^[^\/]+\.json.*$/.test(url)) {
+    } else if (/^\/?[^\/]+\.json.*$/.test(url)) {
       // json文件数据操作，增删查改等
       readAndWriteJSONData(req, res)
     } else if (frontAssetsDirRegExp.test(url)) {

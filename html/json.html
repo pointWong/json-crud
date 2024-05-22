@@ -50,174 +50,96 @@
 <body style="margin: 0;padding: 0;">
   <!-- Vue 实例挂载点 -->
   <div id="app">
-    <div style="height: 80px;">
+    <div style="height: 50px;">
       <div style="display: flex;justify-content: space-between; padding: 20px;">
         <a href="javascript:void(0)" @click="gaback">返回</a>
         <a href="javascript:void(0)" @click="add">添加</a>
       </div>
-      <div style="text-align: center;">
-        {{current.join(',')}}
-      </div>
     </div>
-
     <div style="padding: 20px;box-sizing: border-box;height: calc(100vh - 80px);overflow: auto;">
-      <my-table :columns="columns" :data-source="dataList" @show-row="handleRow"></my-table>
-    </div>
-    <div :class="['modal',{show}]" style="align-items: center" @click="show = false">
-      <div class="modal-content" @click.stop>
-        <div style="display: flex;justify-content: flex-end;padding: 10px;">
-          <button @click="show = false">关闭</button>
-        </div>
-        <div style="height: 80vh;width: 600px;" @click.stop>
-          <iframe v-if="show" :src="iframeUrl" frameborder="0" width="100%" height="100%"></iframe>
-        </div>
-      </div>
+      <object-comp :data="jsonObject" @detail="showDetail" @remove="deleteProp" @modify="modifyProp"></object-comp>
     </div>
   </div>
   <script defer src="/js/request.js"></script>
   <!-- 自定义组件定义 -->
   <script type="module">
-    import MyTable from '/js/components/my-table.js'
+    import ObjectComp from '/js/components/json.js'
     // 创建一个新的Vue实例
     const { onMounted, ref } = Vue;
     const app = Vue.createApp({
       components: {
-        "my-table": MyTable,
+        "ObjectComp": ObjectComp,
       },
       setup () {
-        const current = ref([])
+        let steps = []
         let api = ''
-        const dataList = ref([])
-        const getDataList = (upId, list) => {
-          for (let i = 0; i < list.length; i++) {
-            const item = list[i]
-            if (item.cityId == upId || item.id == upId) {
-              dataList.value = item.child
-              break
-            } else if (item.child && item.child.length) {
-              getDataList(upId, item.child)
-            }
-          }
-        }
-        const columns = ref([])
-        const setCols = () => {
-          try {
-            const cc = Object.keys(dataList.value[0]).filter(item => item != 'child')
-            localStorage.setItem('columns', JSON.stringify(cc))
-            columns.value = [...cc, {
-              render: true
-            }]
-          } catch (error) {
-            localStorage.removeItem('columns')
-          }
-        }
-        const list = ref([])
+        const originalObject = ref({})
+        const jsonObject = ref({})
         const getData = async () => {
           const res = await ajaxRequest("GET", api);
-          list.value = res.data
-          const upId = localStorage.getItem('upId')
-          if (!!(~~upId)) {
-            getDataList(upId, list.value)
-            if (!dataList.value.length) {
-              dataList.value = list.value
-            }
-          } else {
-            dataList.value = list.value
-          }
-          setCols()
+          originalObject.value = res
+          jsonObject.value = steps.reduce((acc, key) => acc[key] || {}, originalObject.value)
         }
 
         onMounted(async () => {
           api = `${location.pathname}.json`
           await getData()
           window.reloadData = () => {
-            show.value = false
             getData()
           }
         });
-        const getName = (row) => {
-          for (let key in row) {
-            let lkey = key.toLowerCase()
-            if (lkey.includes('name') || lkey.includes('label')) {
-              return row[key]
-            }
-          }
-          return row.id
+        const showDetail = (key) => {
+          steps.push(key)
+          jsonObject.value = jsonObject.value[key]
         }
-        const handleRow = async (row, isEdit, isDelete) => {
-          if (isEdit) {
-            localStorage.setItem('currentRow', JSON.stringify(row))
-            iframeUrl.value = `/upsert?type=PUT&pi=${location.pathname}`
-            setTimeout(() => {
-              show.value = true
-            }, 0);
-            return
-          }
-          if (isDelete) {
-            await ajaxRequest('DELETE', api, row)
-            getData()
-            return
-          }
-          if (row.child && row.child.length) {
-            dataList.value = row.child
-          } else {
-            dataList.value = []
-          }
-          current.value = [...current.value, getName(row)]
-          localStorage.setItem('upId', row.cityId || row.id || '0')
-        }
-        const show = ref(false)
-        const iframeUrl = ref('')
-        const add = () => {
-          iframeUrl.value = `/upsert?type=POST&pi=${location.pathname}`
-          setTimeout(() => {
-            show.value = true
-          }, 0);
-          // window.open(`/upsert?type=POST&pi=${location.pathname}`,'_blank')
-        }
-        const getUPList = (upId, list) => {
-          let result = []
-          for (let i = 0; i < list.length; i++) {
-            const item = list[i]
-            if (item.cityId == upId || item.id == upId) {
-              result = list
-              break
-            }
-            if (item.child) {
-              result = getUPList(upId, item.child)
-              if (result.length) break
-            }
-          }
-          return result
-        }
+
         const gaback = () => {
-          let upId
-          const first = dataList.value[0]
-          if (first) {
-            upId = first.upId
-          } else {
-            upId = localStorage.getItem('upId')
-          }
-          const jjj = getUPList(upId, list.value)
-          if (jjj.length) {
-            dataList.value = jjj
-            const fst = dataList.value[0]
-            localStorage.setItem('upId', fst.upId || '0')
-            current.value.pop()
-          } else {
-            localStorage.removeItem('upId')
+          if(!steps.length){
             history.back()
+            return
           }
+          steps.pop()
+          let temp = originalObject.value
+          steps.forEach(step => {
+            temp = temp[step]
+          })
+          jsonObject.value = temp
         }
+
+        const add = async () => {
+          const isArray = jsonObject.value instanceof Array
+          if (isArray) {
+            const value = prompt('请输入一个值')
+            await ajaxRequest("POST", api, { value, path: steps })
+          } else {
+            const key = prompt('请输入属性名')
+            const value = prompt('请输入属性值')
+            await ajaxRequest("POST", api, { value, key, path: steps })
+          }
+          getData()
+        }
+
+        const modifyProp = async (key, value) => {
+          const valueinput = prompt('请输入修改值', value)
+          if (valueinput === null) return
+          await ajaxRequest("PUT", api, { path: steps, key, value: valueinput })
+          getData()
+        }
+
+        const deleteProp = async (key) => {
+          const sbs = confirm('真的要删掉吗？')
+          if (!sbs) return
+          await ajaxRequest('DELETE', api, { path: [...steps, key] })
+          getData()
+        }
+
         return {
-          columns,
-          dataList,
-          handleRow,
-          add,
           gaback,
-          show,
-          iframeUrl,
-          current
+          jsonObject,
+          showDetail,
+          add,
+          deleteProp,
+          modifyProp
         }
       },
     });

@@ -53,6 +53,37 @@ function insertRowInData (row, data) {
   return data;
 }
 
+function insertRowInJson (row = {}, data) {
+  let { key, path, value } = row
+  try {
+    value = JSON.parse(value)
+  } catch (error) {
+    console.log("🚀 ~ updateJsonProperty ~ error:", error)
+  }
+  if (!path) return data
+  let temp = path.reduce((data, key) => data[key] || {}, data);
+  const isArray = Array.isArray(temp)
+  if (isArray) {
+    temp.push(value)
+  } else {
+    temp[key] = value
+  }
+  return data
+}
+
+
+function updateJsonProperty (row = {}, data) {
+  let { key, value, path } = row
+  let current = path.reduce((data, key) => data[key] || {}, data);
+  try {
+    value = JSON.parse(value)
+  } catch (error) {
+    console.log("🚀 ~ updateJsonProperty ~ error:", error)
+  }
+  current[key] = value
+  return data
+}
+
 // 删除数据
 function deleteRowFromData (row, data) {
   for (let i = 0; i < data.length; i++) {
@@ -66,6 +97,20 @@ function deleteRowFromData (row, data) {
     }
   }
   return data
+}
+
+function deletePropertyByPath (row, obj) {
+  let { path } = row
+  const lastKey = path.pop()
+  const parent = path.reduce((obj, key) => obj[key] || {}, obj);
+  if (parent && lastKey) {
+    if (Array.isArray(parent)) {
+      parent.splice(lastKey, 1);
+    } else {
+      delete parent[lastKey];
+    }
+  }
+  return obj
 }
 
 // 通过url设置相应头content-type
@@ -86,6 +131,9 @@ module.exports = {
   readRequestBody,
   setRowInData,
   insertRowInData,
+  insertRowInJson,
+  updateJsonProperty,
   deleteRowFromData,
+  deletePropertyByPath,
   setContentTypeByUrl
 }

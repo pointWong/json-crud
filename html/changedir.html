@@ -47,11 +47,11 @@
   let isdblclicking = false
   // 单击查看
   function jump (path) {
-    setTimeout(() => {
+    setTimeout(async () => {
       if (isdblclicking) return
       isdblclicking = false
+      await getDir(`${fullpath}/${path}`)
       fullpath += `/${path}`
-      getDir(fullpath)
     }, 200);
   }
   // 双击选择

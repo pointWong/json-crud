@@ -1,5 +1,5 @@
 const { readFile, getJsonDir, writeFile, readDirByPath, setJsonDir } = require("./file");
-const { setContentTypeByUrl, readRequestBody, insertRowInData, deleteRowFromData, setRowInData, getUrlParams } = require("./util");
+const { setContentTypeByUrl, readRequestBody, insertRowInJson, deletePropertyByPath, updateJsonProperty, getUrlParams } = require("./util");
 const path = require('path');
 const fs = require('fs');
 // 返回html
@@ -15,26 +15,21 @@ const readAndWriteJSONData = async (req, res) => {
   const cityJSONPath = path.join(getJsonDir(), url)
   let content = await readFile(cityJSONPath)
   res && res.writeHead(200, { 'Content-Type': 'application/json' });
-  const contentJson = JSON.parse(content)
-  const { data } = contentJson
+  let contentJson = JSON.parse(content)
   if (req.method === "GET") {
-    if (data && data instanceof Array) {
-      res.end(content);
-    } else {
-      res.end(JSON.stringify({ data: [contentJson] }));
-    }
+    res.end(content);
     return
   }
   const row = await readRequestBody(req);
   if (req.method === 'POST') {
     // 增加
-    contentJson.data = insertRowInData(row, data)
+    contentJson = insertRowInJson(row, contentJson)
   } else if (req.method === 'DELETE') {
     // 删除
-    contentJson.data = deleteRowFromData(row, data)
+    contentJson = deletePropertyByPath(row, contentJson)
   } else if (req.method === 'PUT') {
     // 修改
-    contentJson.data = setRowInData(row, data)
+    contentJson = updateJsonProperty(row, contentJson)
   }
   await writeFile(cityJSONPath, JSON.stringify(contentJson))
   res && res.end("{\"msg\":\"操作成功\"}");
@@ -64,14 +59,14 @@ async function handleJSONFile (req, res) {
   res.writeHead(200, { 'Content-Type': 'application/json' });
   if (req.method === 'DELETE') {
     fs.unlinkSync(filePath)
-    res.end("{\"msg\":\"文件已删除！\"}")
+    res.end(JSON.stringify({ msg: '文件已删除', ok: true }))
   } else if (req.method === 'POST') {
     if (fs.existsSync(filePath)) {
-      res.end("{\"msg\":\"文件已存在！\"}");
+      res.end(JSON.stringify({ msg: '文件已存在！', ok: false }));
       return
     }
-    fs.writeFileSync(filePath, JSON.stringify({ data: [] }))
-    res.end("{\"msg\":\"操作成功\"}");
+    fs.writeFileSync(filePath, JSON.stringify({}))
+    res.end(JSON.stringify({ msg: '操作成功', ok: true }));
   }
 }
 
@@ -142,7 +137,10 @@ async function methodNotAllow (res) {
 // 500
 async function serverError (res, error) {
   res.writeHead(500, { 'Content-Type': 'application/json' });
-  res.end('Internal Server Error:' + JSON.stringify(error));
+  res.end(JSON.stringify({
+    msg: '服务器出错',
+    error: JSON.stringify(error)
+  }));
 }
 
 module.exports = {

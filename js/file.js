@@ -10,7 +10,7 @@ function readDirByPath (path = '/', justDir = true) {
     }
     return dirfile
   } catch (error) {
-    console.log("🚀 ~ readDirByPath ~ error:", error)
+    return Promise.reject(error)
   }
 }
 // 读文件
@@ -64,7 +64,12 @@ function getJsonDir () {
 }
 
 function setJsonDir (dir) {
-  jsonDir = dir
+  try {
+    fs.readdirSync(dir)
+    jsonDir = dir
+  } catch (error) {
+    console.log("🚀 ~ setJsonDir ~ error:", error)
+  }
 }
 
 module.exports = {
