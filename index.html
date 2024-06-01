@@ -61,6 +61,7 @@
                 <a href="${item}">${item}.json</a>
                 <button class="m-l-20" onclick="javascript:compress('${item}')">压缩</button>
                 <button class="m-l-20" onclick="javascript:deleteFile('${item}')">删除</button>
+                <button class="m-l-20" onclick="javascript:translateFile('${item}')">翻译</button>
               </div>`
     }).join('')
     document.getElementById('container').innerHTML = html
@@ -91,6 +92,14 @@
   async function compress (file) {
     await ajaxRequest('POST', '/compress', { fileName: file })
     alert('压缩成功')
+  }
+  
+  // 翻译
+  async function translateFile (file) {
+    const lang = prompt('当前语言', '中文')
+    const target = prompt('目标语言')
+    await ajaxRequest("POST", '/translate-file', { lang, target, file });
+    alert('翻译成功')
   }
 
   const submitchangeEle = document.getElementById('submitchange')

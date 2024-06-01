@@ -2,6 +2,8 @@ const { readFile, getJsonDir, writeFile, readDirByPath, setJsonDir } = require("
 const { setContentTypeByUrl, readRequestBody, insertRowInJson, deletePropertyByPath, updateJsonProperty, getUrlParams } = require("./util");
 const path = require('path');
 const fs = require('fs');
+const axios = require('axios')
+const locales = require('../locale-map.json')
 // 返回html
 const readHtmlAndResponse = async (res, path) => {
   const content = await readFile(path)
@@ -106,6 +108,67 @@ async function compressFile (req, res) {
   }
 }
 
+async function translate (req, res) {
+  if (req.method === 'POST') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    const row = await readRequestBody(req)
+    let { lang, target, file } = row
+    if (lang && target && file) {
+      try {
+        if (!file.endsWith('.json')) {
+          file = file + '.json'
+        }
+        const filePath = path.join(getJsonDir(), file)
+        let content = await readFile(filePath)
+        const translateContent = await startTranslate(JSON.parse(content), lang, target)
+        console.log("🚀 ~ translate ~ translateContent:", translateContent)
+        const targetFileName = locales[target]
+        console.log("🚀 ~ translate ~ targetFileName:", targetFileName)
+        const translatedFilePath = path.join(getJsonDir(), `${targetFileName || target}.json`)
+        console.log("🚀 ~ translate ~ translatedFilePath:", translatedFilePath)
+        await writeFile(translatedFilePath, JSON.stringify(translateContent))
+        res.end(JSON.stringify({
+          msg: '操作成功',
+        }))
+      } catch (error) {
+        console.log("🚀 ~ translate ~ error:", error)
+        res.end(JSON.stringify({
+          msg: '操作失败',
+        }))
+      }
+    } else {
+      res.end({ msg: 'lang,target,file都是必填！' })
+    }
+  } else {
+    methodNotAllow()
+  }
+}
+
+async function startTranslate (content, lang, target) {
+  for (let key in content) {
+    const value = content[key]
+    if (value instanceof Object) {
+      content[key] = await startTranslate(value, lang, target)
+    } else {
+      const tcontent = await fetchTranlate(value, lang, target)
+      content[key] = tcontent
+    }
+  }
+  return content
+}
+
+async function fetchTranlate (chunk, lang, target) {
+  console.log("🚀 ~ fetchTranlate ~ chunk:", chunk)
+  const rs = await axios.get(`https://benbb.cc/wssay/translate?content=${chunk}&lang=${lang}&target=${target}`)
+  const { isOk, content: tcontent } = rs.data;
+  console.log("🚀 ~ fetchTranlate ~ tcontent:", tcontent)
+  if (isOk) {
+    return tcontent
+  } else {
+    throw new Error('翻译失败')
+  }
+}
+
 // 前端资源
 async function frontEndAssets (res, url) {
   const fp = path.join(process.cwd(), url)
@@ -150,6 +213,7 @@ module.exports = {
   handleJSONFile,
   changeJsonDir,
   compressFile,
+  translate,
   frontEndAssets,
   sendJsonDir,
   notFound,

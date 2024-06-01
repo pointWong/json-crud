@@ -4,7 +4,7 @@ const jsonHtml = './html/json.html'
 const changedirHtml = './html/changedir.html'
 const frontAssetsDirRegExp = /\/(js|css)\/\**/
 const { getJsonFileList } = require('./file');
-const { notFound, serverError, readHtmlAndResponse, readAndWriteJSONData, frontEndAssets, sendJsonDir, handleJSONFile, sendDirFileList, changeJsonDir, compressFile } = require('./res');
+const { notFound, serverError, readHtmlAndResponse, readAndWriteJSONData, frontEndAssets, sendJsonDir, handleJSONFile, sendDirFileList, changeJsonDir, compressFile, translate } = require('./res');
 
 let jsonFileanmeList = getJsonFileList()
 
@@ -42,6 +42,8 @@ const sendResponse = async (req, res) => {
     } else if (url == '/compress') {
       // 压缩
       compressFile(req, res)
+    } else if (url == '/translate-file') {
+      translate(req, res)
     } else {
       notFound(res)
     }
