@@ -94,7 +94,7 @@
         }
 
         const gaback = () => {
-          if(!steps.length){
+          if (!steps.length) {
             history.back()
             return
           }
@@ -110,10 +110,12 @@
           const isArray = jsonObject.value instanceof Array
           if (isArray) {
             const value = prompt('请输入一个值')
+            if (!value) return
             await ajaxRequest("POST", api, { value, path: steps })
           } else {
             const key = prompt('请输入属性名')
             const value = prompt('请输入属性值')
+            if (!value || !key) return
             await ajaxRequest("POST", api, { value, key, path: steps })
           }
           getData()

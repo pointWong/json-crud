@@ -43,6 +43,7 @@ const sendResponse = async (req, res) => {
       // 压缩
       compressFile(req, res)
     } else if (url == '/translate-file') {
+      // 翻译
       translate(req, res)
     } else {
       notFound(res)
