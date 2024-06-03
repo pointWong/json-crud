@@ -159,7 +159,7 @@ async function startTranslate (content, lang, target) {
 
 async function fetchTranlate (chunk, lang, target) {
   console.log("🚀 ~ fetchTranlate ~ chunk:", chunk)
-  const rs = await axios.get(`https://benbb.cc/wssay/translate?content=${chunk}&lang=${lang}&target=${target}`)
+  const rs = await axios.get(`https://benbb.cc/wssay/api/translate?content=${chunk}&lang=${lang}&target=${target}`)
   const { isOk, content: tcontent } = rs.data;
   console.log("🚀 ~ fetchTranlate ~ tcontent:", tcontent)
   if (isOk) {
